@@ -97,6 +97,9 @@ func New(options ...Option) *Dumper {
 	if d.bits {
 		coeff = 8
 	}
+	if d.groups > d.width {
+		d.groups = d.width
+	}
 	between := d.width / d.groups
 	if mod := d.width % d.groups; mod == 0 {
 		between--
