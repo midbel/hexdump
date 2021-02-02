@@ -7,12 +7,13 @@ import (
 	"io"
 	"os"
 
-  "github.com/midbel/hexdump"
+	"github.com/midbel/hexdump"
 )
 
 func main() {
 	var (
 		block   = flag.Int("b", 0, "read block of bytes")
+		group   = flag.Int("g", 0, "group bytes")
 		bits    = flag.Bool("x", false, "print byte in bits instead of hex")
 		size    = flag.Int64("n", 0, "read number of bytes")
 		skip    = flag.Int64("s", 0, "skip number of bytes")
@@ -31,6 +32,7 @@ func main() {
 		hexdump.WithWidth(*width),
 		hexdump.WithVerbose(*verbose),
 		hexdump.WithBits(*bits),
+		hexdump.WithGroup(*group),
 	}
 	d := hexdump.New(options...)
 

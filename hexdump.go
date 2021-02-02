@@ -8,6 +8,7 @@ import (
 const (
 	DefaultColumnCount = 2
 	DefaultColumnWidth = 8
+	DefaultColumnGroup = 1
 	DefaultPadding     = "   "
 	DefaultDelimiter   = "|"
 )
@@ -44,12 +45,12 @@ func WithColumns(cols int) Option {
 	}
 }
 
-func WithGroup(group int) Option {
+func WithGroup(groups int) Option {
 	return func(d *Dumper) {
-		if group <= 0 {
+		if groups <= 0 {
 			return
 		}
-		d.groups = group
+		d.groups = groups
 	}
 }
 
@@ -85,6 +86,7 @@ func New(options ...Option) *Dumper {
 	d := Dumper{
 		width:   DefaultColumnWidth,
 		cols:    DefaultColumnCount,
+		groups:  DefaultColumnGroup,
 		padding: DefaultPadding,
 		delim:   DefaultDelimiter,
 	}
@@ -95,18 +97,22 @@ func New(options ...Option) *Dumper {
 	if d.bits {
 		coeff = 8
 	}
-	d.size = (d.cols * d.width * coeff) + (d.cols * (d.width - 1)) + ((d.cols - 1) * len(d.padding))
+	between := d.width / d.groups
+	if mod := d.width % d.groups; mod == 0 {
+		between--
+	}
+	d.size = (d.cols * d.width * coeff) + (d.cols * between) + ((d.cols - 1) * len(d.padding))
 	const (
 		offlen   = 8
 		spacelen = 4
 	)
-	buflen := offlen + spacelen + d.size + (d.cols*d.width) + (d.cols-1) + (2*len(d.delim))
+	buflen := offlen + spacelen + d.size + (d.cols * d.width) + (d.cols - 1) + (2 * len(d.delim))
 	d.buffer = make([]byte, buflen)
 	for i := range d.buffer {
 		d.buffer[i] = ' '
 	}
 
-	pos := offlen+1
+	pos := offlen + 1
 	copy(d.buffer[pos:], []byte(d.delim))
 	pos += d.size + len(d.delim) + 2
 	copy(d.buffer[pos:], []byte(d.delim))
@@ -122,7 +128,7 @@ func (d *Dumper) Dump(input []byte) string {
 		d.digest = sum
 	}
 	var (
-		str strings.Builder
+		str   strings.Builder
 		width = d.BlockSize()
 	)
 	for i := 0; i < len(input); i += width {
@@ -169,9 +175,11 @@ func (d *Dumper) writeInput(input []byte) {
 		if j >= n {
 			j = n
 		}
+		var g int
 		for k := i; k < j; k++ {
-			if k > i {
+			if g >= d.groups {
 				d.seek(1)
+				g = 0
 				z++
 			}
 			if !d.bits {
@@ -185,6 +193,7 @@ func (d *Dumper) writeInput(input []byte) {
 				}
 				z += 8
 			}
+			g++
 		}
 		if j < n {
 			d.writeString(d.padding)
@@ -206,7 +215,7 @@ func (d *Dumper) writeASCII(input []byte) {
 		d.writeByte(byteChar(input[i]))
 		z++
 	}
-	if width := (d.cols*d.width) + (d.cols-1); z < width {
+	if width := (d.cols * d.width) + (d.cols - 1); z < width {
 		d.writeString(strings.Repeat(" ", width-z))
 	}
 }
