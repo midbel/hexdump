@@ -149,6 +149,10 @@ func (d *Dumper) Dump(input []byte) string {
 	return str.String()
 }
 
+func (d *Dumper) Reset() {
+	d.written = 0
+}
+
 func (d *Dumper) dump(offset uint64, input []byte) {
 	d.index = 0
 	d.writeOffset(offset)

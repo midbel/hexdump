@@ -36,21 +36,35 @@ func main() {
 	}
 	d := hexdump.New(options...)
 
-	r, err := os.Open(flag.Arg(0))
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-	defer r.Close()
-
 	if *block <= 0 {
 		*block = d.BlockSize()
 	}
 
-	var (
-		buf = make([]byte, *block)
-		rs  = bufio.NewReader(LimitReader(r, *size, *skip))
-	)
+	buffer := make([]byte, *block)
+	for i, a := range flag.Args() {
+		if i > 0 {
+			fmt.Println()
+		}
+		if flag.NArg() > 0 {
+			fmt.Println(a)
+		}
+		if err := DumpFile(d, a, buffer, *size, *skip); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(2)
+		}
+	}
+}
+
+func DumpFile(d *hexdump.Dumper, file string, buf []byte, size, skip int64) error {
+	r, err := os.Open(file)
+	if err != nil {
+		return err
+	}
+	defer r.Close()
+
+	d.Reset()
+
+	rs := bufio.NewReader(LimitReader(r, size, skip))
 	for {
 		n, err := rs.Read(buf)
 		if err != nil {
@@ -59,6 +73,7 @@ func main() {
 		str := d.Dump(buf[:n])
 		fmt.Println(str)
 	}
+	return nil
 }
 
 func LimitReader(r io.ReadSeeker, size, skip int64) io.Reader {
