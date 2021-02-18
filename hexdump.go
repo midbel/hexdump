@@ -66,6 +66,21 @@ func WithVerbose(verbose bool) Option {
 	}
 }
 
+func Dump(buf []byte) string {
+	d := New(WithVerbose(true), WithColumns(5))
+	return d.Dump(buf)
+}
+
+func Dump2(buf []byte) string {
+	d := New(WithVerbose(true), WithColumns(5), WithGroup(2))
+	return d.Dump(buf)
+}
+
+func Dump4(buf []byte) string {
+	d := New(WithVerbose(true), WithColumns(5), WithGroup(4))
+	return d.Dump(buf)
+}
+
 type Dumper struct {
 	width   int
 	cols    int
