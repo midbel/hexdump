@@ -45,9 +45,6 @@ func main() {
 		if i > 0 {
 			fmt.Println()
 		}
-		if flag.NArg() > 0 {
-			fmt.Println(a)
-		}
 		if err := DumpFile(d, a, buffer, *size, *skip); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(2)
